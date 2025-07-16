@@ -108,7 +108,7 @@ Portfolio-Optimiser is an advanced Streamlit app for portfolio optimization usin
 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/portfolio-optimiser.git
+git clone https://github.com/aadit-n/portfolio-optimiser.git
 cd portfolio-optimiser
 ```
 
