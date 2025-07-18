@@ -15,6 +15,112 @@ from risk_models.ledoit_wolf_shrinkage import shrinkage
 
 st.set_page_config(layout="wide")
 st.title("Advanced Portfolio Optimizer")
+with st.expander("How This App Works (Math & Concepts)"):
+    st.header("Portfolio Optimization Methods")
+
+    st.subheader("1. Mean-Variance Optimization")
+    st.markdown("""
+    This is based on **Modern Portfolio Theory** by Harry Markowitz. The goal is to find the optimal weights that either:
+    
+    - Minimize risk (portfolio variance) for a given return, or  
+    - Maximize return for a given level of risk.
+
+    The mathematical formulation is:
+    """)
+    st.latex(r"""
+    \text{Minimize } \quad w^T \Sigma w \quad \text{subject to} \quad \sum w_i = 1, \quad w_i \geq 0
+    """)
+    st.markdown("""
+    Where:
+    - \( w \) = asset weights  
+    - \(Σ) = covariance matrix of asset returns  
+    - Constraints: weights sum to 1 and are non-negative (long-only)
+    """)
+
+    st.subheader("2. Monte Carlo Simulation")
+    st.markdown("""
+    This method randomly generates thousands of valid portfolios with different weight combinations. For each, we calculate:
+    - **Expected Return**
+    - **Volatility**
+    - **Sharpe Ratio**
+
+    Then we select the one with the **highest Sharpe Ratio**.
+    """)
+    st.latex(r"""
+    \text{Sharpe Ratio} = \frac{R_p - R_f}{\sigma_p}
+    """)
+    st.markdown("""
+    Where:
+    - \( R_p \) = expected portfolio return  
+    - \( R_f \) = risk-free rate (often assumed 0 for simplification)  
+    - \( \sigma_p \) = standard deviation of portfolio returns
+    """)
+
+    st.subheader("3. Risk Parity")
+    st.markdown("""
+    Risk parity allocates weights so that **each asset contributes equally to total portfolio risk**.
+
+    Risk contribution of asset \( i \) is:
+    """)
+    st.latex(r"""
+    RC_i = w_i (\Sigma w)_i
+    """)
+    st.markdown("""
+    Objective:
+    - Equalize all \( RC_i \)
+    - Usually solved by minimizing squared deviations from average risk contribution.
+
+    This method avoids concentration in low-volatility assets and achieves better diversification of **risk**, not just capital.
+    """)
+
+    st.subheader("4. Black-Litterman Model")
+    st.markdown("""
+    This model blends:
+    - Market-implied equilibrium returns  
+    - Subjective views from investors  
+
+    It overcomes weaknesses in standard mean-variance optimization by allowing for more stable and realistic return estimates.
+    """)
+
+    st.latex(r"""
+    \mu_{BL} = \pi + \tau \Sigma P^T (P \tau \Sigma P^T + \Omega)^{-1} (Q - P \pi)
+    """)
+
+    st.markdown("""
+    Where:
+    - \(π) = implied equilibrium excess returns  
+    - \(τ) = scaling factor for uncertainty in \( \pi \)  
+    - \(Σ) = covariance matrix  
+    - \( P \) = matrix that encodes investor views  
+    - \( Q \) = expected returns from views  
+    - \(Ω) = uncertainty (covariance) in views
+    """)
+
+    st.subheader("5. Risk Models")
+    st.markdown("""
+    You can choose between two types of covariance estimators:
+
+    - **Empirical Covariance**:
+        - Standard sample covariance matrix calculated from historical returns.
+        - Can be unstable when number of assets is large vs number of observations.
+
+    - **Ledoit-Wolf Shrinkage**:
+        - Improves stability and invertibility by combining the sample covariance with a structured matrix (like identity).
+        - Especially useful when using advanced optimizers like risk parity or Black-Litterman.
+
+    The formula is:
+    """)
+
+    st.latex(r"""
+    \Sigma_{LW} = (1 - \alpha) \Sigma_{\text{sample}} + \alpha F
+    """)
+    st.markdown("""
+    Where:
+    - \( Σ_{\text{sample}} \) = empirical covariance  
+    - \( F \) = structured target (e.g., identity or constant correlation)  
+    - \( α \in [0, 1] \) = shrinkage intensity
+    """)
+
 
 st.sidebar.header("User Inputs")
 
@@ -36,11 +142,33 @@ use_black_litterman = st.sidebar.checkbox("Use Black-Litterman")
 
 if use_black_litterman:
     st.sidebar.subheader("Black-Litterman Views")
+    st.sidebar.markdown("""
+    The Black-Litterman model blends market equilibrium returns with your subjective views.  
+    - Select whether your view is **Relative** (e.g., AAPL will outperform MSFT)  
+    - or **Absolute** (e.g., GOOG will return 7% annually).
+    """)
+
     view_type = st.sidebar.selectbox("View Type", ["Relative", "Absolute"])
-    view_long = st.sidebar.text_input("Long Asset (for Relative)", "AAPL", key="bl_view_long")
-    view_short = st.sidebar.text_input("Short Asset (for Relative)", "MSFT", key="bl_view_short")
-    view_ticker = st.sidebar.text_input("Ticker (for Absolute)", "GOOG", key="bl_view_ticker")
+    st.sidebar.markdown("""
+    **Relative:** Compare two assets (e.g., AAPL - MSFT > 5%)  
+    **Absolute:** Set expected return for one asset (e.g., GOOG = 7%)
+    """)
+
+    if view_type == "Relative":
+        view_long = st.sidebar.text_input("Long Asset (expected to outperform)", "AAPL", key="bl_view_long")
+        st.sidebar.caption("This is the asset you believe will perform **better**.")
+        view_short = st.sidebar.text_input("Short Asset (expected to underperform)", "MSFT", key="bl_view_short")
+        st.sidebar.caption("This is the asset you believe will perform **worse**.")
+    else:
+        view_ticker = st.sidebar.text_input("Ticker for Absolute View", "GOOG", key="bl_view_ticker")
+        st.sidebar.caption("Enter the asset for which you have a specific return expectation.")
+
     view_value = st.sidebar.number_input("Expected Return or Difference", value=0.05)
+    st.sidebar.caption("""
+    - For **relative** views: Enter the expected **difference in returns** (e.g., 0.05 = 5% more return than the other asset)  
+    - For **absolute** views: Enter the expected **annual return** (e.g., 0.07 = 7%)
+    """)
+
 
 if st.button("Run Optimization"):
     st.write(f"Fetching data for: {', '.join(tickers)}")
@@ -100,10 +228,16 @@ if st.button("Run Optimization"):
             Q = np.array([view_value])
 
         bl_wts = black_litterman_opt(cov_matrix, market_weights, P, Q)
-        result_df["Black-Litterman"] = bl_wts
-        expected_return_df["Black-Litterman"] = np.dot(bl_wts, avg_return)
-        volatility_df["Black-Litterman"] = np.sqrt(np.dot(bl_wts.T, np.dot(cov_matrix, bl_wts)))
-        sharpe_ratio_df["Black-Litterman"] = (expected_return_df["Black-Litterman"] - risk_free_rate) / volatility_df["Black-Litterman"]  
+
+        if bl_wts is not None and not bl_wts.isnull().values.any():
+            result_df["Black-Litterman"] = bl_wts
+            expected_return_df["Black-Litterman"] = [np.dot(bl_wts, avg_return)]
+            volatility_df["Black-Litterman"] = [np.sqrt(bl_wts.T @ cov_matrix @ bl_wts)]
+            bl_exp_ret = expected_return_df["Black-Litterman"].iloc[0]
+            bl_vol = volatility_df["Black-Litterman"][0]
+            sharpe_ratio_df["Black-Litterman"] = [(bl_exp_ret - risk_free_rate) / bl_vol]
+        else:
+            st.warning("Black-Litterman optimization failed. Please check your views or try different parameters.")
 
     marginal_contrib = cov_matrix @ risk_parity_wts
     risk_contrib =   risk_parity_wts*marginal_contrib
