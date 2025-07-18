@@ -3,7 +3,6 @@ import pandas as pd
 import cvxpy as cp
 
 def optimiser(cov_matrix, market_weights, views_P, views_Q, tau=0.05, delta=2.5):
-
     tickers = market_weights.index if isinstance(market_weights, pd.Series) else [f"Asset {i}" for i in range(len(market_weights))]
     n = len(market_weights)
 
@@ -28,5 +27,8 @@ def optimiser(cov_matrix, market_weights, views_P, views_Q, tau=0.05, delta=2.5)
     constraints = [cp.sum(w) == 1, w >= 0]
     prob = cp.Problem(objective, constraints)
     prob.solve()
+
+    if w.value is None:
+        return None  
 
     return pd.Series(w.value, index=tickers)
