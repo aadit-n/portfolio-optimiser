@@ -1,4 +1,8 @@
 # portfolio-optimiser
+
+DISCLAIMER: NONE OF THE DATA OR RESULTS PROVIDED BY THIS WEBSITE/APP IS FINANCIAL ADVICE. ALL FINANCIAL DECISIONS MADE BY THE USER ARE INDEPENDENT OF THE RESULTS SHOWN HERE.
+
+
 Portfolio-Optimiser is an advanced Streamlit app for portfolio optimization using Mean-Variance, Monte Carlo, Risk Parity, and Black-Litterman models. It supports custom asset views, visualizes efficient frontiers, and computes key metrics like Sharpe ratio, volatility, and risk contributions.
 
 ## Features ##
