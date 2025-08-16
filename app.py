@@ -15,6 +15,9 @@ from risk_models.ledoit_wolf_shrinkage import shrinkage
 
 st.set_page_config(layout="wide")
 st.title("Advanced Portfolio Optimizer")
+st.markdown("""
+DISCLAIMER: NONE OF THE DATA OR RESULTS PROVIDED BY THIS WEBSITE/APP IS FINANCIAL ADVICE. ALL FINANCIAL DECISIONS MADE BY THE USER ARE INDEPENDENT OF THE RESULTS SHOWN HERE.
+""")
 with st.expander("How This App Works (Math & Concepts)"):
     st.header("Portfolio Optimization Methods")
 
@@ -319,3 +322,4 @@ if st.button("Run Optimization"):
 
     st.subheader("Efficient Frontier")
     st.plotly_chart(fig)
+
